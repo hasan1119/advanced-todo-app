@@ -9,6 +9,9 @@ const search = getEById('search')
 const filter = getEById('filter')
 const sort = getEById('sort')
 const tFoot = getEById('tFoot')
+const bulkAction = getEById('bulk_action')
+const allSelect = getEById('all')
+const dismiss = document.querySelector('#dismiss  button')
 
 // date.value = "2018-07-22";
 date.value = new Date().toISOString().slice(0, 10);
@@ -161,8 +164,14 @@ filter.addEventListener('change', function (e) {
     })
 })
 
+
 function addTask(task, index) {
-    const tr = document.createElement("tr")
+    const tr = document.createElement("tr");
+    const checkBox = document.createElement('input')
+    checkBox.type = 'checkbox'
+    checkBox.className = 'check'
+    checkBox.addEventListener('change', (e) => checkFunc(e))
+    checkBox.value = value = task.id;
     tr.innerHTML = `
     <input hidden value='${task.id}'>
         <td id='no'>${index}</td>
@@ -176,7 +185,58 @@ function addTask(task, index) {
             <button onclick="editTask(this,'${task.id}')"><i class="fas fa-edit"></i></button>
         </td>
         `
+    tr.insertAdjacentElement('afterbegin', checkBox)
     tBody.appendChild(tr)
+
+}
+
+let selectedTask = []
+
+function checkFunc(e) {
+    const id = e.target.value;
+    if (e.target.checked) {
+        selectedTask.push(id)
+        actionDiv()
+    } else {
+        selectedTask.splice(selectedTask.indexOf(id), 1)
+        actionDiv()
+    }
+}
+allSelect.addEventListener('change', function (e) {
+    const allCheck = document.querySelectorAll('.check');
+    selectedTask = [];
+    if (this.checked) {
+        [...allCheck].forEach(check => {
+            check.checked = true;
+            selectedTask.push(check.value)
+            actionDiv()
+        })
+    } else {
+        [...allCheck].forEach(check => {
+            check.checked = false;
+            actionDiv()
+        })
+    }
+})
+dismiss.addEventListener('click', function (e) {
+    const allCheck = document.querySelectorAll('.check');
+    selectedTask = [];
+    allSelect.checked = false;
+    [...allCheck].forEach(check => {
+        check.checked = false;
+        actionDiv()
+    })
+})
+
+
+function actionDiv() {
+    if (selectedTask.length) {
+        bulkAction.style.display = 'flex';
+        console.log(selectedTask);
+    } else {
+        bulkAction.style.display = 'none';
+        console.log(selectedTask);
+    }
 }
 
 function editTask(button, id) {
