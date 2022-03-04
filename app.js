@@ -9,12 +9,15 @@ const search = getEById('search')
 const filter = getEById('filter')
 const sort = getEById('sort')
 const tFoot = getEById('tFoot')
+const priority = getEById('priority')
 const bulkAction = getEById('bulk_action')
 const allSelect = getEById('all')
 const dismiss = document.querySelector('#dismiss  button')
+const bulkDelete = document.querySelector('#actions #delete')
 
 // date.value = "2018-07-22";
-date.value = new Date().toISOString().slice(0, 10);
+const today = new Date().toISOString().slice(0, 10);
+date.value = today;
 
 taskForm.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -33,11 +36,10 @@ taskForm.addEventListener('submit', function (e) {
 
 
     this.reset()
+    date.value = today;
 })
 
-function displayToUI(taskObj) {
 
-}
 
 function getTasksFromLocalStorage() {
     let tasks = []
@@ -193,12 +195,15 @@ function addTask(task, index) {
 let selectedTask = []
 
 function checkFunc(e) {
-    const id = e.target.value;
+    const tr = e.target.parentElement;
     if (e.target.checked) {
-        selectedTask.push(id)
+        selectedTask.push(tr)
         actionDiv()
     } else {
-        selectedTask.splice(selectedTask.indexOf(id), 1)
+
+        selectedTask.splice(selectedTask.findIndex(task => {
+            task.firstElementChild.value === e.target.value;
+        }), 1)
         actionDiv()
     }
 }
@@ -208,7 +213,7 @@ allSelect.addEventListener('change', function (e) {
     if (this.checked) {
         [...allCheck].forEach(check => {
             check.checked = true;
-            selectedTask.push(check.value)
+            selectedTask.push(check.parentElement)
             actionDiv()
         })
     } else {
@@ -222,6 +227,7 @@ dismiss.addEventListener('click', function (e) {
     const allCheck = document.querySelectorAll('.check');
     selectedTask = [];
     allSelect.checked = false;
+    bulkAction.style.display = 'none';
     [...allCheck].forEach(check => {
         check.checked = false;
         actionDiv()
@@ -232,12 +238,28 @@ dismiss.addEventListener('click', function (e) {
 function actionDiv() {
     if (selectedTask.length) {
         bulkAction.style.display = 'flex';
-        console.log(selectedTask);
     } else {
         bulkAction.style.display = 'none';
-        console.log(selectedTask);
     }
 }
+
+
+bulkDelete.addEventListener('click', function (e) {
+    let tasks = getTasksFromLocalStorage()
+    selectedTask.forEach(tr => {
+        tr.remove()
+        const id = tr.firstElementChild.value;
+        tasks = tasks.filter(task => {
+            if (task.id !== id) {
+                return task;
+            }
+        })
+    })
+    setTasksToLocalStorage(tasks)
+})
+const statusDiv = priority.cloneNode(true)
+statusDiv.style.border = '2px solid black'
+document.getElementById('delete').insertAdjacentElement('afterend', statusDiv)
 
 function editTask(button, id) {
     const tds = button.parentElement.parentElement.children;
