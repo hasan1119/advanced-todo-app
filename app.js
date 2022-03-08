@@ -1,19 +1,25 @@
-function getEById(id) {
+function $(id) {
     return document.getElementById(id)
 }
-const taskForm = getEById('task-form')
-const tBody = getEById('tBody')
-const date = getEById('date')
-const sortDate = getEById('sortDate')
-const search = getEById('search')
-const filter = getEById('filter')
-const sort = getEById('sort')
-const tFoot = getEById('tFoot')
-const priority = getEById('priority')
-const bulkAction = getEById('bulk_action')
-const allSelect = getEById('all')
+const taskForm = $('task-form')
+const tBody = $('tBody')
+const date = $('date')
+const sortDate = $('sortDate')
+const search = $('search')
+const filter = $('filter')
+const sort = $('sort')
+const tFoot = $('tFoot')
+const priority = $('priority')
+const bulkAction = $('bulk_action')
+const allSelect = $('all')
 const dismiss = document.querySelector('#dismiss  button')
-const bulkDelete = document.querySelector('#actions #delete')
+const bulkDelete = document.querySelector('#actions #delete');
+const bulk_priority = document.querySelector('#bulk_priority')
+const editInp = $('edit_inp')
+const editSel = $('edit_sel')
+
+
+
 
 // date.value = "2018-07-22";
 const today = new Date().toISOString().slice(0, 10);
@@ -194,6 +200,91 @@ function addTask(task, index) {
 
 let selectedTask = []
 
+
+
+editSel.onchange = function (e) {
+    if (this[this.selectedIndex].value == 'name') {
+        editInp.type = 'text'
+        editInp.value = ''
+        editInp.placeholder = 'Modify the name';
+    } else {
+        editInp.type = 'date'
+        editInp.placeholder = '';
+    }
+}
+editInp.oninput = function (e) {
+
+    if (this.type == 'text') {
+        selectedTask.forEach(tr => {
+            ;
+            [...tr.children].forEach(td => {
+                if (td.id == "name") {
+                    td.innerHTML = this.value;
+                }
+            })
+        })
+    } else {
+        selectedTask.forEach(tr => {
+            if (this.value) {
+                [...tr.children].forEach(td => {
+                if (td.id == "date") {
+                    td.innerHTML = this.value;
+                }
+            })
+           }
+           
+        })
+    }
+
+}
+
+document.getElementById('bulk_status').addEventListener('change', function (e) {
+    const selected = this[this.selectedIndex].value;
+    let tasks = getTasksFromLocalStorage()
+    selectedTask.forEach(tr => {
+        [...tr.children].forEach(td => {
+            if (td.id == "status") {
+                td.innerHTML = selected;
+            }
+        })
+        tasks = tasks.filter(task => {
+            if (task.id == tr.firstElementChild.value) {
+                task.status = selected;
+                return task;
+            } else {
+                return task;
+            }
+        })
+        setTasksToLocalStorage(tasks)
+    })
+})
+
+bulk_priority.onchange = function (e) {
+    if (e.target.selectedIndex) {
+        const selected = this[e.target.selectedIndex].value;
+        let tasks = getTasksFromLocalStorage()
+        selectedTask.forEach(tr => {
+            tasks = tasks.filter(task => {
+                if (task.id == tr.firstElementChild.value) {
+                    task.priority = selected;
+                    return task;
+                } else {
+                    return task;
+                }
+            })
+            setTasksToLocalStorage(tasks);
+            [...tr.children].forEach(child => {
+                if (child.id == 'priority') {
+                    child.innerHTML = selected;
+                }
+            })
+        })
+    }
+
+}
+
+
+
 function checkFunc(e) {
     const tr = e.target.parentElement;
     if (e.target.checked) {
@@ -224,6 +315,10 @@ allSelect.addEventListener('change', function (e) {
     }
 })
 dismiss.addEventListener('click', function (e) {
+    document.getElementById('bulk_status').selectedIndex = 0;
+    document.getElementById('bulk_priority').selectedIndex = 0;
+    editInp.value = '';
+    editSel.selectedIndex = 0;
     const allCheck = document.querySelectorAll('.check');
     selectedTask = [];
     allSelect.checked = false;
@@ -236,6 +331,7 @@ dismiss.addEventListener('click', function (e) {
 
 
 function actionDiv() {
+
     if (selectedTask.length) {
         bulkAction.style.display = 'flex';
     } else {
@@ -257,9 +353,7 @@ bulkDelete.addEventListener('click', function (e) {
     })
     setTasksToLocalStorage(tasks)
 })
-const statusDiv = priority.cloneNode(true)
-statusDiv.style.border = '2px solid black'
-document.getElementById('delete').insertAdjacentElement('afterend', statusDiv)
+
 
 function editTask(button, id) {
     const tds = button.parentElement.parentElement.children;
